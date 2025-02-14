@@ -1,74 +1,123 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+"use client"
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, ActivityIndicator } from "react-native"
+import { useState, useRef } from "react"
+import { SafeAreaView } from "react-native-safe-area-context"
+import { useUser } from "@clerk/clerk-expo"
+import { SendHorizonal } from "lucide-react-native"
+import Header from "@/components/Header"
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+interface Message {
+  role: "user" | "assistant"
+  content: string
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+const AiBuddy = () => {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [loadingResponse, setLoadingResponse] = useState(false)
+  const { user } = useUser()
+  const scrollViewRef = useRef<ScrollView>(null)
+
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return
+
+    const userMessage: Message = { role: "user", content: input.trim() }
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
+    setInput("")
+    setLoading(true)
+    setLoadingResponse(true)
+
+    try {
+      const response = await fetch("https://lightning-programming-advertiser-millennium.trycloudflare.com/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok")
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: data.data.result,
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+      } else {
+        console.error("Failed to send message to AI", data)
+      }
+    } catch (error) {
+      console.error("Error sending message to AI:", error)
+    } finally {
+      setLoading(false)
+      setLoadingResponse(false)
+    }
+  }
+
+  return (
+    <View className="flex-1 bg-white">
+      <Header title="Mayani" variant="master" />
+      <SafeAreaView className="flex-1">
+        <ScrollView
+          ref={scrollViewRef}
+          className="flex-1 p-4"
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        >
+          {messages.length === 0 && (
+            <View className="flex-1 items-center justify-center mt-52">
+              <Image source={require("@/assets/images/mayani.jpg")} className="w-52 h-52 rounded-full" />
+            </View>
+          )}
+          {messages.map((message, index) => (
+            <View key={index} className={`mb-4 ${message.role === "user" ? "items-end" : "items-start"}`}>
+              <View className={`p-3 rounded-2xl ${message.role === "user" ? "bg-primary-500" : "bg-secondary-50"}`}>
+                <Text className={`${message.role === "user" ? "text-white" : "text-accent"}`}>{message.content}</Text>
+              </View>
+            </View>
+          ))}
+          {loadingResponse && (
+            <View className="items-start mb-4">
+              <View className="bg-secondary-50 p-3 rounded-2xl">
+                <View className="flex-row items-center">
+                  <ActivityIndicator size="small" color="#0000ff" />
+                  <Text className="text-accent ml-2">Typing...</Text>
+                </View>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        <View className="p-4 border-t border-gray-200 flex-row space-x-2">
+          <TextInput
+            className="flex-1 bg-secondary-50 rounded-full px-4 py-2"
+            placeholder="Ask anything..."
+            value={input}
+            onChangeText={setInput}
+            multiline
+          />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={sendMessage}
+            disabled={loading || loadingResponse}
+            className={`w-12 h-12 rounded-full items-center justify-center ${
+              loading || loadingResponse ? "bg-gray-400" : "bg-primary-500"
+            }`}
+          >
+            {loading ? <ActivityIndicator size="small" color="white" /> : <SendHorizonal size={24} color="white" />}
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
+  )
+}
+
+export default AiBuddy
