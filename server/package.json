@@ -1,17 +1,15 @@
 {
   "name": "server",
-  "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "start": "vercel dev",
+    "deploy": "vercel"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.1.2",
-    "@hono/node-server": "^1.13.7",
-    "ai": "^4.1.5",
-    "hono": "^4.6.18"
+    "@ai-sdk/google": "^1.1.14",
+    "ai": "^4.1.39",
+    "hono": "^4.7.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "tsx": "^4.7.1"
+    "vercel": "^32.4.1"
   }
 }
