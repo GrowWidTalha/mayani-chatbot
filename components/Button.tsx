@@ -1,6 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import React from "react";
-import { VariantProps, cva } from "class-variance-authority";
+import {cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import * as Progress from "react-native-progress";
 import theme from "@/constants/theme";
@@ -102,5 +102,3 @@ const Button = ({
 };
 
 export default Button;
-
-const styles = StyleSheet.create({});

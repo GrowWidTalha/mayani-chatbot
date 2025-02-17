@@ -152,8 +152,6 @@ router.push("/(tabs)")
             {!pendingVerification ? (
               <View className="space-y-4 flex flex-col items-center">
                 <FormField className="gap-3 mb-4">
-                  {" "}
-                  // Added spacing
                   <Label text="Email" />
                   <Input
                     variant="primary"

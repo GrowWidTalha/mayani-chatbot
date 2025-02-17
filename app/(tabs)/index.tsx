@@ -31,7 +31,7 @@ const AiBuddy = () => {
     setLoadingResponse(true)
 
     try {
-      const response = await fetch("https://lightning-programming-advertiser-millennium.trycloudflare.com/ai", {
+      const response = await fetch("https://mayani-chatbot-server.vercel.app/api/ai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,6 +116,9 @@ const AiBuddy = () => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      {/* <Text className="text-4xl font-pbold ">
+        Hello world
+      </Text> */}
     </View>
   )
 }
